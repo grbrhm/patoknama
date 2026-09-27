@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PATOK NAMA — Simulator Protokol Merek Adaptif</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c2b23;
+    --paper:#eee7d6;
+    --paper-2:#e2d8c1;
+    --stake:#7a4f2b;
+    --stake-dark:#5c3a1f;
+    --green:#3c7a52;
+    --green-bg:#d9e8dc;
+    --amber:#a9761f;
+    --amber-bg:#f1e2c1;
+    --red:#a63d31;
+    --red-bg:#f3dcd6;
+    --line:rgba(28,43,35,0.16);
+    --shadow:0 1px 0 rgba(28,43,35,0.08);
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#ece4d2;
+      --paper:#171e1a;
+      --paper-2:#1f2721;
+      --stake:#c99a6a;
+      --stake-dark:#e0b686;
+      --green:#7fbd94;
+      --green-bg:#1f3226;
+      --amber:#e0b355;
+      --amber-bg:#3a2f18;
+      --red:#e08578;
+      --red-bg:#3a201c;
+      --line:rgba(236,228,210,0.16);
+      --shadow:0 1px 0 rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#ece4d2;
+    --paper:#171e1a;
+    --paper-2:#1f2721;
+    --stake:#c99a6a;
+    --stake-dark:#e0b686;
+    --green:#7fbd94;
+    --green-bg:#1f3226;
+    --amber:#e0b355;
+    --amber-bg:#3a2f18;
+    --red:#e08578;
+    --red-bg:#3a201c;
+    --line:rgba(236,228,210,0.16);
+    --shadow:0 1px 0 rgba(0,0,0,0.3);
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  .wrap{max-width:920px;margin:0 auto;padding:0 24px;}
+  img,svg{max-width:100%;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    padding-top:calc(env(safe-area-inset-top,0px) + 14px);
+    padding-bottom:14px;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .brandmark{display:flex;align-items:center;gap:10px;}
+  .brandmark .stakeicon{width:22px;height:22px;flex:none;}
+  .brandmark span{font-family:'Source Serif 4',serif;font-weight:600;font-size:1.05rem;}
+  nav{display:flex;gap:18px;font-size:0.85rem;overflow-x:auto;}
+  nav a{text-decoration:none;color:var(--ink);opacity:0.7;white-space:nowrap;}
+  nav a:hover{opacity:1;}
+  @media(max-width:640px){ nav{display:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 40px;border-bottom:1px solid var(--line);}
+  .hero .eyebrow{
+    font-size:0.78rem;color:var(--stake);font-weight:600;margin-bottom:14px;
+  }
+  .hero h1{font-size:clamp(2rem,5vw,2.9rem);max-width:16ch;}
+  .hero p.lede{max-width:56ch;margin-top:16px;font-size:1.05rem;opacity:0.85;}
+
+  .gap-demo{
+    margin-top:36px;border:1px solid var(--line);background:var(--paper-2);
+    border-radius:4px;padding:22px 22px 26px;
+  }
+  .gap-demo .gap-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .gap-demo label{font-size:0.85rem;opacity:0.75;}
+  .gap-track{position:relative;height:10px;border-radius:6px;background:var(--paper);margin:18px 0 10px;border:1px solid var(--line);overflow:visible;}
+  .gap-fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--red);opacity:0.55;transition:width .2s ease, background .2s ease;}
+  .gap-fill.mid{background:var(--amber);}
+  .gap-fill.low{background:var(--green);}
+  .gap-marker{
+    position:absolute;top:-9px;width:2px;height:28px;background:var(--ink);opacity:0.3;
+  }
+  input[type="range"]{width:100%;accent-color:var(--stake);}
+  .gap-readout{display:flex;justify-content:space-between;font-size:0.8rem;margin-top:6px;opacity:0.75;}
+  .gap-status{margin-top:14px;font-size:0.95rem;font-weight:600;}
+  .gap-status .tag{
+    display:inline-block;padding:2px 9px;border-radius:3px;font-size:0.72rem;
+    margin-right:8px;font-family:'IBM Plex Mono',monospace;
+  }
+  .tag.red{background:var(--red-bg);color:var(--red);}
+  .tag.amber{background:var(--amber-bg);color:var(--amber);}
+  .tag.green{background:var(--green-bg);color:var(--green);}
+
+  /* ---------- sections ---------- */
+  section.block{padding:52px 0;border-bottom:1px solid var(--line);}
+  section.block:last-of-type{border-bottom:none;}
+  .block-head{max-width:60ch;margin-bottom:28px;}
+  .block-head .kicker{font-size:0.78rem;color:var(--stake);font-weight:600;margin-bottom:8px;}
+  .block-head h2{font-size:1.65rem;}
+  .block-head p{margin-top:10px;opacity:0.82;font-size:0.98rem;}
+
+  .card{
+    border:1px solid var(--line);background:var(--paper-2);border-radius:4px;padding:24px;
+  }
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr;}}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:0.82rem;opacity:0.75;margin-bottom:6px;}
+  .field input[type="text"], .field select{
+    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:3px;
+    background:var(--paper);color:var(--ink);font:inherit;font-size:0.92rem;
+  }
+  .field input:focus, .field select:focus, button:focus-visible, input[type=range]:focus-visible{
+    outline:2px solid var(--stake);outline-offset:2px;
+  }
+  button.btn{
+    background:var(--stake);color:var(--paper);border:none;border-radius:3px;
+    padding:11px 18px;font:inherit;font-size:0.9rem;font-weight:600;cursor:pointer;
+  }
+  button.btn:hover{background:var(--stake-dark);}
+  button.btn.ghost{background:transparent;color:var(--stake);border:1px solid var(--stake);}
+  button.btn.ghost:hover{background:var(--stake);color:var(--paper);}
+
+  .result{
+    margin-top:18px;border-radius:4px;padding:16px 18px;border:1px solid var(--line);
+    display:none;
+  }
+  .result.show{display:block;}
+  .result.status-aman{background:var(--green-bg);border-color:var(--green);}
+  .result.status-mirip{background:var(--amber-bg);border-color:var(--amber);}
+  .result.status-bentrok{background:var(--red-bg);border-color:var(--red);}
+  .result .status-label{font-weight:700;font-size:1.02rem;margin-bottom:4px;}
+  .result.status-aman .status-label{color:var(--green);}
+  .result.status-mirip .status-label{color:var(--amber);}
+  .result.status-bentrok .status-label{color:var(--red);}
+  .result .status-detail{font-size:0.88rem;opacity:0.85;}
+
+  /* radar */
+  .radar-sliders .field{margin-bottom:22px;}
+  .radar-sliders .valline{display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:6px;}
+  .radar-sliders .valline b{font-family:'IBM Plex Mono',monospace;font-weight:500;}
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  .gauge-num{font-family:'Source Serif 4',serif;font-size:3rem;font-weight:600;line-height:1;}
+  .gauge-word{font-size:0.85rem;margin-top:6px;opacity:0.8;}
+
+  /* pagar */
+  .pagar-tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px;}
+  @media(max-width:640px){.pagar-tiers{grid-template-columns:1fr;}}
+  .tier{border:1px solid var(--line);border-radius:4px;padding:14px;opacity:0.4;transition:opacity .2s, box-shadow .2s;}
+  .tier.active{opacity:1;box-shadow:0 0 0 2px currentColor inset;}
+  .tier h4{font-family:'IBM Plex Sans',sans-serif;font-size:0.82rem;font-weight:700;margin-bottom:6px;letter-spacing:0.02em;}
+  .tier p{font-size:0.82rem;opacity:0.85;margin:0;}
+  .tier.hijau{color:var(--green);}
+  .tier.kuning{color:var(--amber);}
+  .tier.merah{color:var(--red);}
+  .tier.active.hijau{background:var(--green-bg);}
+  .tier.active.kuning{background:var(--amber-bg);}
+  .tier.active.merah{background:var(--red-bg);}
+
+  .vault{border-top:1px dashed var(--line);margin-top:22px;padding-top:18px;}
+  .vault h4{font-size:0.85rem;font-weight:700;margin-bottom:10px;}
+  .vault-list{list-style:none;margin:0 0 14px;padding:0;font-size:0.85rem;}
+  .vault-list li{
+    display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);
+  }
+  .vault-list li:last-child{border-bottom:none;}
+  .vault-list .t{font-family:'IBM Plex Mono',monospace;font-size:0.76rem;opacity:0.65;white-space:nowrap;}
+  .vault-empty{font-size:0.85rem;opacity:0.6;font-style:italic;}
+
+  /* rnt */
+  .rnt-out{margin-top:18px;}
+  .rnt-bar-row{margin-bottom:16px;}
+  .rnt-bar-row .lbl{display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:5px;}
+  .rnt-bar-row .lbl b{font-family:'IBM Plex Mono',monospace;font-weight:500;}
+  .rnt-track{height:10px;border-radius:6px;background:var(--paper);border:1px solid var(--line);overflow:hidden;}
+  .rnt-fill{height:100%;background:var(--stake);border-radius:6px;transition:width .3s ease;}
+  .rnt-fill.you{background:var(--green);}
+
+  /* roadmap */
+  .roadmap{position:relative;padding-left:26px;}
+  .roadmap::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);}
+  .rstep{position:relative;padding-bottom:26px;cursor:pointer;}
+  .rstep:last-child{padding-bottom:0;}
+  .rstep::before{
+    content:attr(data-n);position:absolute;left:-26px;top:0;width:14px;height:14px;
+    border-radius:50%;background:var(--paper);border:2px solid var(--stake);
+  }
+  .rstep h4{font-size:0.95rem;font-weight:600;font-family:'IBM Plex Sans',sans-serif;margin-bottom:4px;}
+  .rstep .yr{font-size:0.76rem;color:var(--stake);font-family:'IBM Plex Mono',monospace;margin-bottom:4px;display:block;}
+  .rstep p{font-size:0.87rem;opacity:0.82;margin:0;max-height:0;overflow:hidden;transition:max-height .25s ease;}
+  .rstep.open p{max-height:200px;margin-top:6px;}
+
+  footer{padding:40px 0 calc(48px + env(safe-area-inset-bottom,0px));text-align:center;font-size:0.82rem;opacity:0.6;}
+
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+  @media (prefers-reduced-motion: reduce){
+    *{transition-duration:0.01ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brandmark">
+      <svg class="stakeicon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M12 2L15 8H9L12 2Z" fill="currentColor" style="color:var(--stake)"/>
+        <rect x="10.3" y="7" width="3.4" height="15" rx="0.6" fill="currentColor" style="color:var(--stake)"/>
+      </svg>
+      <span>PATOK NAMA</span>
+    </div>
+    <nav>
+      <a href="#cermin">Cermin</a>
+      <a href="#radar">Radar</a>
+      <a href="#pagar">Pagar</a>
+      <a href="#rnt">RNT</a>
+      <a href="#peta">Peta Jalan</a>
+    </nav>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Simulator protokol merek adaptif berbasis AI</div>
+    <h1>Menutup jeda antara nama dikenal dan nama didaftarkan</h1>
+    <p class="lede">
+      Di Indonesia, hak merek jatuh ke pendaftar pertama, bukan pemakai pertama. Setiap hari sebuah nama
+      toko dibiarkan viral tanpa didaftarkan adalah hari ketika pihak lain bisa mengklaimnya. Geser
+      penggeser di bawah untuk merasakan risikonya sendiri.
+    </p>
+
+    <div class="gap-demo">
+      <div class="gap-row">
+        <label for="gapDays">Sudah berapa lama nama toko Anda viral, belum didaftarkan?</label>
+        <span class="mono" id="gapDaysLabel">30 hari</span>
+      </div>
+      <input type="range" id="gapDays" min="0" max="180" value="30" step="1" aria-describedby="gapStatus">
+      <div class="gap-track" aria-hidden="true">
+        <div class="gap-fill low" id="gapFill" style="width:16%"></div>
+        <div class="gap-marker" style="left:8%"></div>
+        <div class="gap-marker" style="left:34%"></div>
+      </div>
+      <div class="gap-readout" aria-hidden="true"><span>Baru viral</span><span>60 hari (masa umum. Berita Resmi Merek)</span><span>180 hari+</span></div>
+      <div class="gap-status" id="gapStatus"></div>
+    </div>
+  </div>
+</header>
+
+<section class="block" id="cermin">
+  <div class="wrap">
+    <div class="block-head">
+      <div class="kicker">Modul 1 — CERMIN</div>
+      <h2>Periksa nama sebelum diunggah</h2>
+      <p>CERMIN membaca nama toko, logo, dan kategori produk, lalu memanggil logika penelusuran kemiripan
+      ala PDKI untuk memberi salah satu dari tiga status: aman, mirip, atau bentrok — sekaligus memetakan
+      ke kelas barang yang tepat, karena kasus MS Glow vs PS Glow kalah hanya karena salah kelas.</p>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div class="field">
+          <label for="tokoNama">Nama toko / merek</label>
+          <input type="text" id="tokoNama" placeholder="mis. Kerudung Rina Cantik" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="tokoKategori">Kategori produk</label>
+          <select id="tokoKategori">
+            <option value="fashion">Fashion &amp; kerudung (Kelas 25)</option>
+            <option value="kosmetik">Kosmetik &amp; kecantikan (Kelas 3)</option>
+            <option value="minuman">Minuman (Kelas 32)</option>
+            <option value="makanan">Makanan olahan (Kelas 29/30)</option>
+            <option value="jasa">Jasa &amp; digital (Kelas 35/42)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn" id="btnCermin">Periksa nama</button>
+      <div class="result" id="cerminResult">
+        <div class="status-label" id="cerminStatusLabel"></div>
+        <div class="status-detail" id="cerminStatusDetail"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="radar">
+  <div class="wrap">
+    <div class="block-head">
+      <div class="kicker">Modul 2 — RADAR MOMENTUM</div>
+      <h2>Mendeteksi saat nama mulai bernilai</h2>
+      <p>Dua sinyal dipadukan: lonjakan penjualan/pencarian di lokapasar, dan status pengumuman di Berita
+      Resmi Merek. Ambang ditetapkan terhadap nilai tengah kategori — geser untuk melihat kapan momentum
+      berubah menjadi sinyal kuning atau merah.</p>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div class="radar-sliders">
+          <div class="field">
+            <div class="valline"><span>Lonjakan penjualan mingguan</span><b id="salesVal">40%</b></div>
+            <input type="range" id="salesRange" min="0" max="300" value="40" step="5">
+          </div>
+          <div class="field">
+            <div class="valline"><span>Lonjakan pencarian nama toko</span><b id="searchVal">30%</b></div>
+            <input type="range" id="searchRange" min="0" max="300" value="30" step="5">
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:0.86rem;opacity:0.85;">
+              <input type="checkbox" id="beritaCheck" style="width:auto;">
+              Ada permohonan serupa muncul di Berita Resmi Merek
+            </label>
+          </div>
+        </div>
+        <div class="gauge-wrap">
+          <div class="gauge-num" id="momentumNum">70</div>
+          <div class="gauge-word" id="momentumWord">Skor Momentum (0–100)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="pagar">
+  <div class="wrap">
+    <div class="block-head">
+      <div class="kicker">Modul 3 — PAGAR</div>
+      <h2>Dari status dan sinyal, menjadi tindakan</h2>
+      <p>PAGAR memadukan hasil CERMIN di atas dengan skor momentum RADAR untuk menentukan satu dari tiga
+      tingkat tindakan. Penjual tetap memegang keputusan akhir — PAGAR hanya menyiapkan, bukan memaksa.</p>
+    </div>
+    <div class="card">
+      <div class="pagar-tiers">
+        <div class="tier hijau" id="tierHijau">
+          <h4>Hijau — Informasi</h4>
+          <p>Nama aman dan belum ramai. Cukup dipantau berkala.</p>
+        </div>
+        <div class="tier kuning" id="tierKuning">
+          <h4>Kuning — Draf otomatis</h4>
+          <p>Nama mulai melonjak. Draf permohonan terisi otomatis dari data NIB.</p>
+        </div>
+        <div class="tier merah" id="tierMerah">
+          <h4>Merah — Keberatan</h4>
+          <p>Muncul permohonan serupa saat masa pengumuman. Templat keberatan disiapkan.</p>
+        </div>
+      </div>
+      <div class="vault">
+        <h4>Brankas Bukti Pakai</h4>
+        <ul class="vault-list" id="vaultList">
+          <li class="vault-empty" id="vaultEmpty">Belum ada riwayat unggahan tersimpan.</li>
+        </ul>
+        <button class="btn ghost" id="btnVault">+ Catat bukti pakai hari ini</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="rnt">
+  <div class="wrap">
+    <div class="block-head">
+      <div class="kicker">Indikator keberhasilan</div>
+      <h2>Rasio Nama Terlindungi (RNT)</h2>
+      <p>RNT = jumlah permohonan merek ÷ jumlah usaha yang aktif berjualan daring. Data nasional 2025
+      menghasilkan RNT 3,5%. Masukkan angkamu sendiri untuk membandingkan posisi terhadap target uji rintis
+      tahun kedua (10%) dan benchmark UE (44% pendapatan lebih tinggi bagi yang mendaftar).</p>
+    </div>
+    <div class="card">
+      <div class="grid2">
+        <div class="field">
+          <label for="rntPermohonan">Jumlah permohonan merek</label>
+          <input type="text" inputmode="numeric" id="rntPermohonan" value="153351">
+        </div>
+        <div class="field">
+          <label for="rntUsaha">Jumlah usaha aktif berjualan daring</label>
+          <input type="text" inputmode="numeric" id="rntUsaha" value="4400000">
+        </div>
+      </div>
+      <div class="rnt-out">
+        <div class="rnt-bar-row">
+          <div class="lbl"><span>RNT kamu</span><b id="rntYouLabel">3.5%</b></div>
+          <div class="rnt-track"><div class="rnt-fill you" id="rntYouBar" style="width:8%"></div></div>
+        </div>
+        <div class="rnt-bar-row">
+          <div class="lbl"><span>Target uji rintis tahun ke-2</span><b>10%</b></div>
+          <div class="rnt-track"><div class="rnt-fill" style="width:23%"></div></div>
+        </div>
+        <div class="rnt-bar-row">
+          <div class="lbl"><span>Rata-rata UMKM terdaftar hak KI di UE</span><b>10%</b></div>
+          <div class="rnt-track"><div class="rnt-fill" style="width:23%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="peta">
+  <div class="wrap">
+    <div class="block-head">
+      <div class="kicker">Peta jalan implementasi</div>
+      <h2>Lima tahun, satu celah, satu indikator</h2>
+      <p>Ketuk setiap tahun untuk melihat cakupannya.</p>
+    </div>
+    <div class="card">
+      <div class="roadmap" id="roadmap">
+        <div class="rstep" data-n="1">
+          <span class="yr">2027</span>
+          <h4>Purwarupa CERMIN + PAGAR</h4>
+          <p>Diuji di satu lokapasar mitra, ±1.000 penjual usaha mikro dan kecil di dua provinsi.</p>
+        </div>
+        <div class="rstep" data-n="2">
+          <span class="yr">2028</span>
+          <h4>RADAR MOMENTUM aktif</h4>
+          <p>Target RNT kelompok uji rintis naik dari 3,5% menuju 10%, setara tingkat UMKM UE.</p>
+        </div>
+        <div class="rstep" data-n="3">
+          <span class="yr">2029</span>
+          <h4>Replikasi tiga platform</h4>
+          <p>Diperluas ke platform yang telah menunjuk penghubung resmi dengan DJKI.</p>
+        </div>
+        <div class="rstep" data-n="4">
+          <span class="yr">2030</span>
+          <h4>Integrasi awal layanan DJKI</h4>
+          <p>Penyelarasan alur PAGAR dengan sistem permohonan merek daring resmi.</p>
+        </div>
+        <div class="rstep" data-n="5">
+          <span class="yr">2031</span>
+          <h4>Integrasi penuh</h4>
+          <p>PATOK NAMA menjadi lapisan baku pelindungan identitas di ekosistem niaga elektronik.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Prototipe interaktif berdasarkan naskah PATOK NAMA — Unleashing the Colors of Local Brands to Thrive in the Modern Era.
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Gap demo ----------
+  var gapDays = document.getElementById('gapDays');
+  var gapDaysLabel = document.getElementById('gapDaysLabel');
+  var gapFill = document.getElementById('gapFill');
+  var gapStatus = document.getElementById('gapStatus');
+
+  function updateGap(){
+    var v = parseInt(gapDays.value, 10);
+    gapDaysLabel.textContent = v + ' hari';
+    var pct = Math.min(100, (v/180)*100);
+    gapFill.style.width = pct + '%';
+    gapFill.classList.remove('low','mid');
+    var tag, tagClass, msg;
+    if(v <= 14){
+      tagClass='green'; tag='AMAN'; gapFill.classList.add('low');
+      msg='Jeda masih pendek. Ini saat termurah dan teraman untuk mendaftar.';
+    } else if(v <= 60){
+      tagClass='amber'; tag='WASPADA'; gapFill.classList.add('mid');
+      msg='Nama mulai dikenal namun belum masuk masa pengumuman. Risiko trademark squatting meningkat.';
+    } else {
+      tagClass='red'; tag='RENTAN';
+      msg='Nama sudah cukup lama bernilai tanpa pelindungan hukum — persis Recognition-Registration Gap yang dialami Rina.';
+    }
+    gapStatus.innerHTML = '<span class="tag '+tagClass+'">'+tag+'</span>' + msg;
+  }
+  gapDays.addEventListener('input', updateGap);
+  updateGap();
+
+  // ---------- CERMIN ----------
+  var btnCermin = document.getElementById('btnCermin');
+  var cerminResult = document.getElementById('cerminResult');
+  var cerminStatusLabel = document.getElementById('cerminStatusLabel');
+  var cerminStatusDetail = document.getElementById('cerminStatusDetail');
+  var lastCerminStatus = null;
+
+  function hashString(s){
+    var h = 0;
+    for(var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  }
+
+  btnCermin.addEventListener('click', function(){
+    var nama = document.getElementById('tokoNama').value.trim();
+    var kategori = document.getElementById('tokoKategori').value;
+    if(!nama){
+      nama = 'Nama Toko Tanpa Judul';
+    }
+    var h = hashString(nama.toLowerCase() + '|' + kategori) % 100;
+    var status, label, detail;
+    if(h < 55){
+      status='aman'; label='AMAN — tidak ditemukan kemiripan terdaftar';
+      detail='Tidak ada nama serupa pada kelas "'+kategoriLabel(kategori)+'" di basis data. Aman diteruskan ke RADAR MOMENTUM untuk dipantau.';
+    } else if(h < 82){
+      status='mirip'; label='MIRIP — ditemukan 1–2 nama berdekatan';
+      detail='Ada penamaan yang mirip secara fonetik atau visual pada kelas "'+kategoriLabel(kategori)+'". Disarankan meninjau logo dan menambah pembeda sebelum mendaftar.';
+    } else {
+      status='bentrok'; label='BENTROK — kemiripan tinggi terdeteksi';
+      detail='Nama sangat dekat dengan merek terdaftar pada kelas "'+kategoriLabel(kategori)+'". Pertimbangkan penyesuaian nama, atau siapkan bukti pakai lebih awal jika ingin tetap mengajukan.';
+    }
+    lastCerminStatus = status;
+    cerminResult.className = 'result show status-'+status;
+    cerminStatusLabel.textContent = label;
+    cerminStatusDetail.textContent = detail;
+    updatePagar();
+  });
+
+  function kategoriLabel(k){
+    var map = {fashion:'Fashion & kerudung', kosmetik:'Kosmetik & kecantikan', minuman:'Minuman', makanan:'Makanan olahan', jasa:'Jasa & digital'};
+    return map[k] || k;
+  }
+
+  // ---------- RADAR MOMENTUM ----------
+  var salesRange = document.getElementById('salesRange');
+  var searchRange = document.getElementById('searchRange');
+  var beritaCheck = document.getElementById('beritaCheck');
+  var salesVal = document.getElementById('salesVal');
+  var searchVal = document.getElementById('searchVal');
+  var momentumNum = document.getElementById('momentumNum');
+  var momentumWord = document.getElementById('momentumWord');
+
+  function updateRadar(){
+    var s = parseInt(salesRange.value,10);
+    var q = parseInt(searchRange.value,10);
+    salesVal.textContent = s+'%';
+    searchVal.textContent = q+'%';
+    var score = Math.round(Math.min(100, (s*0.5 + q*0.5)/3));
+    momentumNum.textContent = score;
+    var word;
+    if(score < 34){ word = 'Tenang — di bawah nilai tengah kategori'; }
+    else if(score < 67){ word = 'Mulai bergerak — mendekati ambang lonjakan'; }
+    else { word = 'Melonjak — di atas ambang, layak ditindak'; }
+    momentumWord.textContent = word;
+    updatePagar();
+  }
+  salesRange.addEventListener('input', updateRadar);
+  searchRange.addEventListener('input', updateRadar);
+  beritaCheck.addEventListener('change', updatePagar);
+
+  // ---------- PAGAR ----------
+  var tierHijau = document.getElementById('tierHijau');
+  var tierKuning = document.getElementById('tierKuning');
+  var tierMerah = document.getElementById('tierMerah');
+
+  function updatePagar(){
+    var score = parseInt(momentumNum.textContent,10) || 0;
+    var beritaOn = beritaCheck.checked;
+    var tier;
+    if(beritaOn || lastCerminStatus === 'bentrok'){
+      tier = 'merah';
+    } else if(score >= 60 || lastCerminStatus === 'mirip'){
+      tier = 'kuning';
+    } else {
+      tier = 'hijau';
+    }
+    tierHijau.classList.toggle('active', tier==='hijau');
+    tierKuning.classList.toggle('active', tier==='kuning');
+    tierMerah.classList.toggle('active', tier==='merah');
+  }
+
+  // ---------- Brankas Bukti Pakai ----------
+  var btnVault = document.getElementById('btnVault');
+  var vaultList = document.getElementById('vaultList');
+  var vaultEmpty = document.getElementById('vaultEmpty');
+  var vaultEntries = [];
+
+  try {
+    var saved = localStorage.getItem('patoknama_vault');
+    if(saved){ vaultEntries = JSON.parse(saved); }
+  } catch(e) { vaultEntries = []; }
+
+  function renderVault(){
+    vaultList.innerHTML = '';
+    if(vaultEntries.length === 0){
+      vaultList.appendChild(vaultEmpty);
+      return;
+    }
+    vaultEntries.slice().reverse().forEach(function(entry){
+      var li = document.createElement('li');
+      var span1 = document.createElement('span');
+      span1.textContent = entry.label;
+      var span2 = document.createElement('span');
+      span2.className = 't';
+      span2.textContent = entry.time;
+      li.appendChild(span1);
+      li.appendChild(span2);
+      vaultList.appendChild(li);
+    });
+  }
+  renderVault();
+
+  btnVault.addEventListener('click', function(){
+    var nama = document.getElementById('tokoNama').value.trim() || 'Produk tanpa nama';
+    var now = new Date();
+    var timeStr = now.toLocaleString('id-ID', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    vaultEntries.push({label: 'Bukti pakai — ' + nama, time: timeStr});
+    try { localStorage.setItem('patoknama_vault', JSON.stringify(vaultEntries)); } catch(e) {}
+    renderVault();
+  });
+
+  // ---------- Roadmap ----------
+  document.querySelectorAll('.rstep').forEach(function(step){
+    step.addEventListener('click', function(){
+      step.classList.toggle('open');
+    });
+  });
+  var first = document.querySelector('.rstep');
+  if(first){ first.classList.add('open'); }
+
+  updateRadar();
+  updatePagar();
+})();
+</script>
+
+</body>
+</html>
