@@ -1,6 +1,24 @@
 <!-- ===== ADD-ON: INTEGRASI DJKI (SIMULASI) =====
      Tempel blok ini di file PATOK NAMA, tepat SEBELUM tag </body>.
      Menambah kartu "Integrasi DJKI" di tab Ringkasan. Memakai gaya dan data yang sudah ada. -->
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f0e6" id="metaTheme">
+<title>PATOK NAMA</title>
+<script>
+/* Terapkan tema sebelum render agar tidak berkedip. Default: terang. */
+(function(){
+  var t='light';
+  try{ t=localStorage.getItem('patoknama_theme')||'light'; }catch(e){}
+  document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   .djki-sub{font-size:.84rem;color:var(--muted);margin-bottom:12px;}
   .djki-no{font:500 1.15rem var(--mono);letter-spacing:.02em;margin:2px 0 10px;}
