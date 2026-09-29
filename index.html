@@ -59,99 +59,6 @@
 
   *{box-sizing:border-box;}
   html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%;}
-     <!-- ===== ADD-ON: INTEGRASI DJKI (SIMULASI) =====
-     Tempel blok ini di file PATOK NAMA, tepat SEBELUM tag </body>.
-     Menambah kartu "Integrasi DJKI" di tab Ringkasan. Memakai gaya dan data yang sudah ada. -->
-<style>
-  .djki-sub{font-size:.84rem;color:var(--muted);margin-bottom:12px;}
-  .djki-no{font:500 1.15rem var(--mono);letter-spacing:.02em;margin:2px 0 10px;}
-  .djki-msg{font-size:.8rem;color:var(--red);min-height:1.1em;margin:6px 0 10px;}
-  .djki .steps .step{cursor:default;}
-  .djki .steps .step.now{border-color:var(--stake);background:var(--stake-tint);}
-  .djki .steps .step.now span:last-child{font-weight:600;}
-  .djki .steps .step.done span:last-child{text-decoration:none;color:var(--ink);}
-</style>
-<script>
-(function(){
-  "use strict";
-  var K='patoknama_djki', panel=document.getElementById('panel-ringkasan');
-  if(!panel) return;
-  var STAGES=['Diterima DJKI','Pemeriksaan formalitas','Pengumuman Berita Resmi Merek','Pemeriksaan substantif','Sertifikat terbit'];
-  var HINT=['Permohonan masuk antrean.','Kelengkapan berkas sedang dicek.','Masa keberatan pihak lain berjalan. Pantau tab Radar & Pagar.','Pemeriksa menilai kemiripan dan kelayakan merek.','Selesai. Simulasi berakhir.'];
-  var KLS={fashion:'Kelas 25',kosmetik:'Kelas 3',minuman:'Kelas 32',makanan:'Kelas 29/30',jasa:'Kelas 35/42'};
-  var $=function(s,r){return (r||document).querySelector(s);};
-  function app(){try{return JSON.parse(localStorage.getItem('patoknama_v2'))||{};}catch(e){return {};}}
-  function load(){try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}}
-  function save(o){try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
-  function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n;}
-
-  var card=el('div','card djki'); card.id='djkiCard'; card.style.marginTop='16px';
-  panel.appendChild(card);
-
-  function render(){
-    var a=app(), d=load(), nama=(a.nama||'').trim(), kls=KLS[a.kategori]||KLS.fashion;
-    card.innerHTML='';
-    var title=el('div','card-title'), s=el('span',null,'Integrasi DJKI ');
-    var info=el('button','info','i'); info.setAttribute('data-tip','Simulasi: kirim draf permohonan ke DJKI dan lacak statusnya. Belum tersambung ke sistem DJKI sungguhan.'); info.setAttribute('aria-label','Info');
-    s.appendChild(info); title.appendChild(s);
-    var pill=el('span','pill '+(d.no?'green':'amber'), d.no?'Terkirim':'Siap kirim'); title.appendChild(pill);
-    card.appendChild(title);
-
-    if(!d.no){
-      card.appendChild(el('p','djki-sub', nama ? 'Merek: '+nama+' · '+kls+' · '+(a.vault||[]).length+' bukti pakai ikut dilampirkan.' : 'Periksa nama di tab Cermin dulu agar draf terisi otomatis.'));
-      var lb=el('label','lbl','NIB (13 digit)'); lb.setAttribute('for','djkiNib'); card.appendChild(lb);
-      var row=el('div','inputrow'), inp=el('input'); inp.type='text'; inp.id='djkiNib'; inp.inputMode='numeric'; inp.maxLength=13; inp.placeholder='mis. 1234567890123'; inp.value=d.nib||'';
-      var btn=el('button','btn','Kirim otomatis ke DJKI'); row.appendChild(inp); row.appendChild(btn); card.appendChild(row);
-      var msg=el('p','djki-msg'); msg.setAttribute('aria-live','polite'); card.appendChild(msg);
-      inp.addEventListener('input',function(){inp.value=inp.value.replace(/\D/g,'');var o=load();o.nib=inp.value;save(o);});
-      btn.addEventListener('click',function(){
-        var n=(inp.value||'').replace(/\D/g,'');
-        if(!nama){msg.textContent='Isi dan periksa nama merek di tab Cermin dulu.';return;}
-        if(n.length!==13){msg.textContent='NIB harus 13 digit.';inp.focus();return;}
-        msg.textContent=''; send(nama,kls,n,(a.vault||[]).length);
-      });
-    } else {
-      card.appendChild(el('p','djki-sub',d.nama+' · '+d.kls+' · '+d.bukti+' bukti pakai'));
-      card.appendChild(el('div','djki-no',d.no));
-      var st=el('div','steps');
-      STAGES.forEach(function(x,i){
-        var r=el('div','step'+(i<d.idx?' done':'')+(i===d.idx?' now':''));
-        var c=el('span','check'); c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
-        r.appendChild(c); r.appendChild(el('span',null,x)); st.appendChild(r);
-      });
-      card.appendChild(st);
-      card.appendChild(el('p','muted small',HINT[d.idx])).style.marginTop='12px';
-      var rb=el('div','rowbtns'); rb.style.marginTop='12px';
-      if(d.idx<STAGES.length-1){var up=el('button','btn sm','Perbarui status'); up.addEventListener('click',function(){var o=load();o.idx=Math.min(STAGES.length-1,o.idx+1);save(o);render();}); rb.appendChild(up);}
-      var nw=el('button','btn ghost sm','Ajukan merek lain'); nw.addEventListener('click',function(){var o=load();save({nib:o.nib});render();}); rb.appendChild(nw);
-      card.appendChild(rb);
-    }
-  }
-
-  function send(nama,kls,nib,bukti){
-    var ov=el('div','overlay open'), sh=el('div','sheet'); ov.appendChild(sh);
-    sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true');
-    sh.appendChild(el('h2','sheet-title','Menghubungkan ke DJKI'));
-    var list=el('div','steps'), rows=[];
-    ['Verifikasi NIB','Cek kemiripan di basis data merek','Kirim draf permohonan dan bukti pakai','Terima nomor permohonan'].forEach(function(x){
-      var r=el('div','step'), c=el('span','check'); c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
-      r.appendChild(c); r.appendChild(el('span',null,x)); r.style.cursor='default'; list.appendChild(r); rows.push(r);
-    });
-    sh.appendChild(list); sh.appendChild(el('p','muted small','Simulasi. Tidak ada data yang dikirim ke DJKI.')).style.marginTop='12px';
-    document.body.appendChild(ov); document.body.style.overflow='hidden';
-    var i=0;(function tick(){
-      if(i<rows.length){rows[i].classList.add('done');i++;setTimeout(tick,700);return;}
-      var no='DID'+new Date().getFullYear()+String(Math.floor(Math.random()*900000)+100000);
-      var o=load();save({nib:nib,no:no,nama:nama,kls:kls,bukti:bukti,idx:0});
-      setTimeout(function(){ov.remove();document.body.style.overflow='';render();},500);
-    })();
-  }
-
-  render();
-  document.addEventListener('click',function(e){if(e.target.closest('.tab,[data-goto],#resetBtn')) setTimeout(render,60);});
-})();
-</script>
-
   body{
     margin:0;min-height:100%;background:var(--bg);color:var(--ink);
     font:400 15px/1.5 var(--sans);-webkit-font-smoothing:antialiased;
@@ -1156,5 +1063,98 @@ Bukti pemakaian: ${n} catatan tersimpan di Brankas Bukti Pakai`;
   lastTier = tier();
 })();
 </script>
+  <!-- ===== ADD-ON: INTEGRASI DJKI (SIMULASI) =====
+     Tempel blok ini di file PATOK NAMA, tepat SEBELUM tag </body>.
+     Menambah kartu "Integrasi DJKI" di tab Ringkasan. Memakai gaya dan data yang sudah ada. -->
+<style>
+  .djki-sub{font-size:.84rem;color:var(--muted);margin-bottom:12px;}
+  .djki-no{font:500 1.15rem var(--mono);letter-spacing:.02em;margin:2px 0 10px;}
+  .djki-msg{font-size:.8rem;color:var(--red);min-height:1.1em;margin:6px 0 10px;}
+  .djki .steps .step{cursor:default;}
+  .djki .steps .step.now{border-color:var(--stake);background:var(--stake-tint);}
+  .djki .steps .step.now span:last-child{font-weight:600;}
+  .djki .steps .step.done span:last-child{text-decoration:none;color:var(--ink);}
+</style>
+<script>
+(function(){
+  "use strict";
+  var K='patoknama_djki', panel=document.getElementById('panel-ringkasan');
+  if(!panel) return;
+  var STAGES=['Diterima DJKI','Pemeriksaan formalitas','Pengumuman Berita Resmi Merek','Pemeriksaan substantif','Sertifikat terbit'];
+  var HINT=['Permohonan masuk antrean.','Kelengkapan berkas sedang dicek.','Masa keberatan pihak lain berjalan. Pantau tab Radar & Pagar.','Pemeriksa menilai kemiripan dan kelayakan merek.','Selesai. Simulasi berakhir.'];
+  var KLS={fashion:'Kelas 25',kosmetik:'Kelas 3',minuman:'Kelas 32',makanan:'Kelas 29/30',jasa:'Kelas 35/42'};
+  var $=function(s,r){return (r||document).querySelector(s);};
+  function app(){try{return JSON.parse(localStorage.getItem('patoknama_v2'))||{};}catch(e){return {};}}
+  function load(){try{return JSON.parse(localStorage.getItem(K))||{};}catch(e){return {};}}
+  function save(o){try{localStorage.setItem(K,JSON.stringify(o));}catch(e){}}
+  function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n;}
+
+  var card=el('div','card djki'); card.id='djkiCard'; card.style.marginTop='16px';
+  panel.appendChild(card);
+
+  function render(){
+    var a=app(), d=load(), nama=(a.nama||'').trim(), kls=KLS[a.kategori]||KLS.fashion;
+    card.innerHTML='';
+    var title=el('div','card-title'), s=el('span',null,'Integrasi DJKI ');
+    var info=el('button','info','i'); info.setAttribute('data-tip','Simulasi: kirim draf permohonan ke DJKI dan lacak statusnya. Belum tersambung ke sistem DJKI sungguhan.'); info.setAttribute('aria-label','Info');
+    s.appendChild(info); title.appendChild(s);
+    var pill=el('span','pill '+(d.no?'green':'amber'), d.no?'Terkirim':'Siap kirim'); title.appendChild(pill);
+    card.appendChild(title);
+
+    if(!d.no){
+      card.appendChild(el('p','djki-sub', nama ? 'Merek: '+nama+' · '+kls+' · '+(a.vault||[]).length+' bukti pakai ikut dilampirkan.' : 'Periksa nama di tab Cermin dulu agar draf terisi otomatis.'));
+      var lb=el('label','lbl','NIB (13 digit)'); lb.setAttribute('for','djkiNib'); card.appendChild(lb);
+      var row=el('div','inputrow'), inp=el('input'); inp.type='text'; inp.id='djkiNib'; inp.inputMode='numeric'; inp.maxLength=13; inp.placeholder='mis. 1234567890123'; inp.value=d.nib||'';
+      var btn=el('button','btn','Kirim otomatis ke DJKI'); row.appendChild(inp); row.appendChild(btn); card.appendChild(row);
+      var msg=el('p','djki-msg'); msg.setAttribute('aria-live','polite'); card.appendChild(msg);
+      inp.addEventListener('input',function(){inp.value=inp.value.replace(/\D/g,'');var o=load();o.nib=inp.value;save(o);});
+      btn.addEventListener('click',function(){
+        var n=(inp.value||'').replace(/\D/g,'');
+        if(!nama){msg.textContent='Isi dan periksa nama merek di tab Cermin dulu.';return;}
+        if(n.length!==13){msg.textContent='NIB harus 13 digit.';inp.focus();return;}
+        msg.textContent=''; send(nama,kls,n,(a.vault||[]).length);
+      });
+    } else {
+      card.appendChild(el('p','djki-sub',d.nama+' · '+d.kls+' · '+d.bukti+' bukti pakai'));
+      card.appendChild(el('div','djki-no',d.no));
+      var st=el('div','steps');
+      STAGES.forEach(function(x,i){
+        var r=el('div','step'+(i<d.idx?' done':'')+(i===d.idx?' now':''));
+        var c=el('span','check'); c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+        r.appendChild(c); r.appendChild(el('span',null,x)); st.appendChild(r);
+      });
+      card.appendChild(st);
+      card.appendChild(el('p','muted small',HINT[d.idx])).style.marginTop='12px';
+      var rb=el('div','rowbtns'); rb.style.marginTop='12px';
+      if(d.idx<STAGES.length-1){var up=el('button','btn sm','Perbarui status'); up.addEventListener('click',function(){var o=load();o.idx=Math.min(STAGES.length-1,o.idx+1);save(o);render();}); rb.appendChild(up);}
+      var nw=el('button','btn ghost sm','Ajukan merek lain'); nw.addEventListener('click',function(){var o=load();save({nib:o.nib});render();}); rb.appendChild(nw);
+      card.appendChild(rb);
+    }
+  }
+
+  function send(nama,kls,nib,bukti){
+    var ov=el('div','overlay open'), sh=el('div','sheet'); ov.appendChild(sh);
+    sh.setAttribute('role','dialog'); sh.setAttribute('aria-modal','true');
+    sh.appendChild(el('h2','sheet-title','Menghubungkan ke DJKI'));
+    var list=el('div','steps'), rows=[];
+    ['Verifikasi NIB','Cek kemiripan di basis data merek','Kirim draf permohonan dan bukti pakai','Terima nomor permohonan'].forEach(function(x){
+      var r=el('div','step'), c=el('span','check'); c.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+      r.appendChild(c); r.appendChild(el('span',null,x)); r.style.cursor='default'; list.appendChild(r); rows.push(r);
+    });
+    sh.appendChild(list); sh.appendChild(el('p','muted small','Simulasi. Tidak ada data yang dikirim ke DJKI.')).style.marginTop='12px';
+    document.body.appendChild(ov); document.body.style.overflow='hidden';
+    var i=0;(function tick(){
+      if(i<rows.length){rows[i].classList.add('done');i++;setTimeout(tick,700);return;}
+      var no='DID'+new Date().getFullYear()+String(Math.floor(Math.random()*900000)+100000);
+      var o=load();save({nib:nib,no:no,nama:nama,kls:kls,bukti:bukti,idx:0});
+      setTimeout(function(){ov.remove();document.body.style.overflow='';render();},500);
+    })();
+  }
+
+  render();
+  document.addEventListener('click',function(e){if(e.target.closest('.tab,[data-goto],#resetBtn')) setTimeout(render,60);});
+})();
+</script>
+
 </body>
 </html>
